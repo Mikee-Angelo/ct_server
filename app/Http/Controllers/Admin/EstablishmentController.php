@@ -12,7 +12,11 @@ use Illuminate\Support\Str;
 class EstablishmentController extends Controller
 {
     public function index() {
-        return Inertia::render('Establishment/Index');
+        $establishments = Establishment::latest()->paginate(10);
+
+        return Inertia::render('Establishment/Index', [
+            'establishments' => $establishments
+        ]);
     }
 
     public function store(StoreEstablishmentRequest $request) {
