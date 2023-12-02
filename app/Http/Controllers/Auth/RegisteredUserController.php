@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserProfile;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
@@ -31,36 +33,57 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'device_id' => ['required', 'string']
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+            $request->validate([
+                'first_name' => 'required|string|max:100',
+                'middle_name' => 'string|nullable|max:50',
+                'last_name' => 'required|string|max:100',
+                'address' => 'required|string|max:100',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'device_id' => ['required', 'string']
+            ]);
 
-        /**
-         * If the user register through api it sends JSON response  
-         */
-        if($request->wantsJson()) {
+            $fn = $request->first_name;
+            $ln = $request->last_name;
+            $mn = $request->middle_name;
+            $cookedMiddleName = isset($mn) ? ' '. $mn. ' ' : ' ';
+            $name = $fn . $cookedMiddleName . $ln;
+
+            $user = User::create([
+                'name' => $name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+
+            $profile = UserProfile::create([
+                'user_id' => $user->id,
+                'first_name' => $fn,
+                'middle_name' => $mn,
+                'last_name' => $ln,
+                'address' => $request->address,
+            ]);
+
+            /**
+             * If the user register through api it sends JSON response
+             */
             $user->assignRole('User');
+
+            DB::commit();
 
             return response()->json([
                 'message' => "Registered successfully",
                 'token' => $user->createToken($request->device_id)->plainTextToken,
                 'user' => $user
             ], 201);
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'message' => 'Something went wrong'
+            ], 500);
         }
-
-        event(new Registered($user));
-
-        Auth::login($user);
-
-        return redirect(RouteServiceProvider::HOME);
     }
 }
