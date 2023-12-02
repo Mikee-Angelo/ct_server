@@ -29,12 +29,13 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'device_id' => ['required', 'string']
         ]);
 
         $user = User::create([
@@ -42,6 +43,19 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        /**
+         * If the user register through api it sends JSON response  
+         */
+        if($request->wantsJson()) {
+            $user->assignRole('User');
+
+            return response()->json([
+                'message' => "Registered successfully",
+                'token' => $user->createToken($request->device_id)->plainTextToken,
+                'user' => $user
+            ], 201);
+        }
 
         event(new Registered($user));
 

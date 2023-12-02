@@ -10,9 +10,13 @@ import {
     Input,
 } from '@chakra-ui/react'
 export default function Login({ status, canResetPassword }) {
+    const userAgent = window.navigator.userAgent;
+    const randomString = Math.random().toString(20).substring(2, 14) + Math.random().toString(20).substring(2, 14);
+    const deviceID = `${userAgent}  -${randomString}`;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
+        device_id: deviceID,
         remember: false,
     });
 
