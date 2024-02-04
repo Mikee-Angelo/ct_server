@@ -23,7 +23,8 @@ class GetScanRequest extends FormRequest
     {
         return [
             'type' => 'in:EST,USER',
-            'item' => 'numeric',
+            'limit' => 'numeric',
+            'page' => 'numeric',
         ];
     }
 }

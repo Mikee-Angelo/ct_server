@@ -13,4 +13,19 @@ class ScanEstablishment extends Model
         'user_id', 
         'establishment_id'
     ];
+
+    protected $hidden = [
+        'establishment_id',
+        'user_id'
+    ];
+
+    /**
+     * Get the establishment that owns the ScanEstablishment
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function establishment()
+    {
+        return $this->belongsTo(Establishment::class, 'establishment_id');
+    }
 }

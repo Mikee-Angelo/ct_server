@@ -17,15 +17,15 @@ class ScanController extends Controller
     public function index(GetScanRequest $request) { 
         $validated = $request->validated();
         $user_id = auth()->user()->id; 
-        $item = $request->validated ?? 10;
-        
+        $limit = $request->limit ?? 10;
+
         if($request->type == 'EST') { 
-            $data = ScanEstablishment::where('user_id', $user_id)->paginate($item);
+            $data = ScanEstablishment::with('establishment')->where('user_id', $user_id)->paginate($limit);
         }else { 
-            $data = ScanUser::where('user_id', $user_id)->paginate($item); 
+            $data = ScanUser::with('user')->where('user_id', $user_id)->paginate($limit); 
         }
 
-        return response()->json($data);
+        return response()->json($data->items());
     }
 
     public function store(StoreScanRequest $request) { 

@@ -13,4 +13,19 @@ class ScanUser extends Model
         'user_id', 
         'scanned_user_id',
     ]; 
+
+    protected $hidden = [
+        'user_id', 
+        'scanned_user_id'
+    ];
+
+    /**
+     * Get the user that owns the ScanUser
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'scanned_user_id');
+    }
 }
